@@ -2,8 +2,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-// import binomialheaptester.Utils;
-
 /**
  * BinomialHeap
  *
