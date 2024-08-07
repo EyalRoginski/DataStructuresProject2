@@ -1,8 +1,8 @@
-package binomialheap;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+
+// import binomialheaptester.Utils;
 
 /**
  * BinomialHeap
@@ -14,21 +14,13 @@ public class BinomialHeap {
     public int size;
     public HeapNode last;
     public HeapNode min;
+    public int numOfTrees;
 
-    public static void main(String[] args) {
-        BinomialHeap heap1 = new BinomialHeap();
-        BinomialHeap heap2 = new BinomialHeap();
-        heap1.last = new HeapNode(0, "0", null, null, null, 0);
-        heap1.last.next = heap1.last;
-        heap1.min = heap1.last;
-        heap2.last = new HeapNode(1, "1", null, null, null, 0);
-        heap2.last.next = heap2.last;
-        heap2.min = heap2.last;
-        System.out.println("Starting meld");
-        heap1.meld(heap2);
-        System.out.println(String.format("heap1 last rank: %d", heap1.last.rank));
-        System.out.println(String.format("heap1 last key: %d", heap1.last.item.key));
-        System.out.println(String.format("heap1 last child key: %d", heap1.last.child.item.key));
+    public BinomialHeap() {
+        size = 0;
+        last = null;
+        min = null;
+        numOfTrees = 0;
     }
 
     /**
@@ -39,7 +31,36 @@ public class BinomialHeap {
      *
      */
     public HeapItem insert(int key, String info) {
-        return null; // should be replaced by student code
+        if (empty()) {
+            HeapNode node = new HeapNode(key, info, null, null, null, 0);
+            node.next = node;
+            last = node;
+            min = node;
+            size = 1;
+            numOfTrees = 1;
+            return node.item;
+        }
+        BinomialHeap singletonHeap = new BinomialHeap();
+        HeapItem item = singletonHeap.insert(key, info);
+        meld(singletonHeap);
+        return item;
+    }
+
+    /**
+     * Update the `min` pointer. Goes over the entire tree list.
+     */
+    private void updateMin() {
+        if (empty()) {
+            return;
+        }
+        min = last;
+        HeapNode current = last.next;
+        while (current != last) {
+            if (current.item.key <= min.item.key) {
+                min = current;
+            }
+            current = current.next;
+        }
     }
 
     /**
@@ -48,8 +69,44 @@ public class BinomialHeap {
      *
      */
     public void deleteMin() {
-        return; // should be replaced by student code
+        if (empty()) {
+            return;
+        }
 
+        HeapNode current = min.next;
+        HeapNode beforeMin = current;
+        HeapNode newMin = current;
+        while (current != min) {
+            if (current.item.key <= newMin.item.key) {
+                newMin = current;
+            }
+            if (current.next == min) {
+                beforeMin = current;
+            }
+            current = current.next;
+        }
+
+        BinomialHeap minHeap = new BinomialHeap();
+        if (min.rank > 0) {
+            minHeap.last = min.child;
+            minHeap.size = (1 << min.rank) - 1;
+            minHeap.updateMin();
+            minHeap.numOfTrees = min.rank;
+            current = minHeap.last;
+            do {
+                current.parent = null;
+                current = current.next;
+            } while (current != minHeap.last);
+        }
+
+        numOfTrees -= 1;
+        beforeMin.next = min.next;
+        this.size -= minHeap.size + 1;
+        if (last == min) {
+            last = beforeMin;
+        }
+        min = newMin;
+        meld(minHeap);
     }
 
     /**
@@ -58,7 +115,30 @@ public class BinomialHeap {
      *
      */
     public HeapItem findMin() {
-        return null; // should be replaced by student code
+        if (empty()) {
+            return null;
+        }
+        return min.item;
+    }
+
+    /**
+     * Swaps two HeapNodes' items.
+     */
+    private static void swapItems(HeapNode node1, HeapNode node2) {
+        HeapItem temp = node1.item;
+        node1.item = node2.item;
+        node1.item.node = node1;
+        node2.item = temp;
+        node2.item.node = node2;
+    }
+
+    /**
+     * Pushes an item up its tree to restore the Heap property.
+     */
+    private static void heapifyUp(HeapItem item) {
+        while (item.node.parent != null && item.key < item.node.parent.item.key) {
+            swapItems(item.node, item.node.parent);
+        }
     }
 
     /**
@@ -69,7 +149,11 @@ public class BinomialHeap {
      * 
      */
     public void decreaseKey(HeapItem item, int diff) {
-        return; // should be replaced by student code
+        item.key -= diff;
+        heapifyUp(item);
+        if (item.key < min.item.key) {
+            min = item.node;
+        }
     }
 
     /**
@@ -78,11 +162,15 @@ public class BinomialHeap {
      *
      */
     public void delete(HeapItem item) {
-        return; // should be replaced by student code
+        decreaseKey(item, item.key - min.item.key + 1);
+        deleteMin();
     }
 
+    /**
+     * Add 3 HeapNodes together, assuming they are all not null.
+     */
     private static AdderResult add3(HeapNode node1, HeapNode node2, HeapNode node3) {
-        List<HeapNode> l = Arrays.asList(node1, node2, node3);
+        ArrayList<HeapNode> l = new ArrayList<HeapNode>(Arrays.asList(node1, node2, node3));
         HeapNode result = Collections.min(l, (a, b) -> Integer.compare(a.item.key, b.item.key));
         l.remove(result);
         HeapNode first = l.get(0);
@@ -91,6 +179,9 @@ public class BinomialHeap {
         return new AdderResult(result, carry);
     }
 
+    /**
+     * Returns the next HeapNode in the list, or null if we've reached the end.
+     */
     private static HeapNode advance(HeapNode node, BinomialHeap heap) {
         if (node == heap.last || node == null) {
             return null;
@@ -98,6 +189,9 @@ public class BinomialHeap {
         return node.next;
     }
 
+    /**
+     * Result class of the `fullAdder` function.
+     */
     private static class AdderResult {
         public final HeapNode result;
         public final HeapNode carry;
@@ -108,6 +202,10 @@ public class BinomialHeap {
         }
     }
 
+    /**
+     * Returns the HeapNode that isn't null, assuming there's only one such
+     * HeapNode.
+     */
     private static HeapNode getNotNull(HeapNode node1, HeapNode node2, HeapNode node3) {
         if (node1 != null) {
             return node1;
@@ -118,6 +216,9 @@ public class BinomialHeap {
         return node3;
     }
 
+    /**
+     * Adds the HeapNodes together, assuming exactly one in null.
+     */
     private static HeapNode add2(HeapNode node1, HeapNode node2, HeapNode node3) {
         if (node1 == null) {
             return link(node2, node3);
@@ -127,6 +228,9 @@ public class BinomialHeap {
         return link(node1, node2);
     }
 
+    /**
+     * Adds three HeapNodes together (null or not) and returns the result.
+     */
     private static AdderResult fullAdder(HeapNode node1, HeapNode node2, HeapNode node3) {
         int notNullNum = (node1 != null ? 1 : 0) + (node2 != null ? 1 : 0) + (node3 != null ? 1 : 0);
         switch (notNullNum) {
@@ -149,11 +253,25 @@ public class BinomialHeap {
      *
      */
     public void meld(BinomialHeap heap2) {
+        if (empty()) {
+            last = heap2.last;
+            min = heap2.min;
+            size = heap2.size;
+            numOfTrees = heap2.numOfTrees;
+            return;
+        }
+
+        if (heap2.empty()) {
+            return;
+        }
+
         HeapNode node1 = last.next;
         HeapNode node2 = heap2.last.next;
         HeapNode sentinel = new HeapNode();
         HeapNode previous = sentinel;
         HeapNode carry = null;
+        size += heap2.size;
+        numOfTrees += heap2.numTrees();
 
         while ((carry != null) || (node1 != null && node2 != null)) {
             if (carry != null) {
@@ -167,6 +285,11 @@ public class BinomialHeap {
                 if (node2 != null) {
                     addNode2 = node2.rank == carry.rank;
                 }
+
+                if (addNode1 || addNode2) {
+                    numOfTrees--;
+                }
+
                 AdderResult result = fullAdder(carry, addNode1 ? node1 : null,
                         addNode2 ? node2 : null);
                 if (result.result != null) {
@@ -182,6 +305,7 @@ public class BinomialHeap {
                 }
             } else {
                 if (node1.rank == node2.rank) {
+                    numOfTrees--;
                     HeapNode nextNode1 = advance(node1, this);
                     HeapNode nextNode2 = advance(node2, heap2);
                     AdderResult result = fullAdder(node1, node2, null);
@@ -207,6 +331,7 @@ public class BinomialHeap {
                 }
             }
         }
+
         if (node1 == null && node2 == null) {
             this.last = previous;
         } else if (node1 != null) {
@@ -217,6 +342,17 @@ public class BinomialHeap {
         }
         this.last.next = sentinel.next;
         this.min = this.min.item.key <= heap2.min.item.key ? this.min : heap2.min;
+
+        pushMinUp();
+    }
+
+    /**
+     * Pushes the `min` pointer up its tree.
+     */
+    private void pushMinUp() {
+        while (min.parent != null) {
+            min = min.parent;
+        }
     }
 
     /**
@@ -225,7 +361,7 @@ public class BinomialHeap {
      * 
      */
     public int size() {
-        return 42; // should be replaced by student code
+        return size;
     }
 
     /**
@@ -235,7 +371,7 @@ public class BinomialHeap {
      * 
      */
     public boolean empty() {
-        return false; // should be replaced by student code
+        return size == 0;
     }
 
     /**
@@ -244,9 +380,12 @@ public class BinomialHeap {
      * 
      */
     public int numTrees() {
-        return 0; // should be replaced by student code
+        return numOfTrees;
     }
 
+    /**
+     * Links two HeapNodes of the same rank, as seen in class.
+     */
     public static HeapNode link(HeapNode node1, HeapNode node2) {
         if (node1.item.key <= node2.item.key) {
             node1.addAsChild(node2);

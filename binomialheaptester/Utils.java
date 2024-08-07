@@ -7,11 +7,10 @@ import java.util.List;
 
 public class Utils {
 
-
     public static BinomialHeap.HeapNode findByInfo(BinomialHeap heap, String info) {
         List<BinomialHeap.HeapNode> nodes = iterateHeap(heap);
         for (BinomialHeap.HeapNode node : nodes) {
-            if (node.item.info.equals(info)){
+            if (node.item.info.equals(info)) {
                 return node;
             }
         }
@@ -28,8 +27,7 @@ public class Utils {
         do {
             iterateHeap(result, currRoot);
             currRoot = currRoot.next;
-        }
-        while (currRoot != firstRoot);
+        } while (currRoot != firstRoot);
 
         return result;
     }
@@ -44,7 +42,6 @@ public class Utils {
         do {
             iterateHeap(currList, currChild);
             currChild = currChild.next;
-        }
-        while (currChild != firstChild);
+        } while (currChild != firstChild);
     }
 }
