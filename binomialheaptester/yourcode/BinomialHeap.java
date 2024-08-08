@@ -15,12 +15,84 @@ public class BinomialHeap {
     public HeapNode last;
     public HeapNode min;
     public int numOfTrees;
+    public int linkNum;
+    public int sumOfDeletedRanks;
 
     public BinomialHeap() {
         size = 0;
         last = null;
         min = null;
         numOfTrees = 0;
+        linkNum = 0;
+        sumOfDeletedRanks = 0;
+    }
+
+    public static void main(String[] args) {
+        // for (int i = 1; i <= 5; i++) {
+        // firstExperiment(i);
+        // }
+        for (int i = 1; i <= 5; i++) {
+            thirdExperiment(i);
+        }
+    }
+
+    public static void firstExperiment(int i) {
+        int n = (int) (Math.pow(3, i + 7)) - 1;
+        BinomialHeap heap = new BinomialHeap();
+        long startTime = System.currentTimeMillis();
+        for (int j = 1; j <= n; j++) {
+            heap.insert(j, "");
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println(String.format("First Experiment, i = %d", i));
+        System.out.println(String.format("Runtime: %d", endTime - startTime));
+        System.out.println(String.format("Number of links: %d", heap.linkNum));
+        System.out.println(String.format("Number of trees: %d", heap.numTrees()));
+        System.out.println(String.format("Sum of deleted ranks: %d", heap.sumOfDeletedRanks));
+        System.out.println("-----------------------------------------------------");
+    }
+
+    public static void secondExperiment(int i) {
+        int n = (int) (Math.pow(3, i + 7)) - 1;
+        BinomialHeap heap = new BinomialHeap();
+        ArrayList<Integer> list = new ArrayList<>();
+        for (int j = 1; j <= n; j++) {
+            list.add(j);
+        }
+        Collections.shuffle(list);
+        long startTime = System.currentTimeMillis();
+        for (int j = 0; j < n; j++) {
+            heap.insert(list.get(j), "");
+        }
+        for (int j = 0; j < n / 2; j++) {
+            heap.deleteMin();
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println(String.format("Second Experiment, i = %d", i));
+        System.out.println(String.format("Runtime: %d", endTime - startTime));
+        System.out.println(String.format("Number of links: %d", heap.linkNum));
+        System.out.println(String.format("Number of trees: %d", heap.numTrees()));
+        System.out.println(String.format("Sum of deleted ranks: %d", heap.sumOfDeletedRanks));
+        System.out.println("-----------------------------------------------------");
+    }
+
+    public static void thirdExperiment(int i) {
+        int n = (int) (Math.pow(3, i + 7)) - 1;
+        BinomialHeap heap = new BinomialHeap();
+        long startTime = System.currentTimeMillis();
+        for (int j = n; j >= 1; j--) {
+            heap.insert(j, "");
+        }
+        while (heap.size() > 31) {
+            heap.deleteMin();
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println(String.format("Third Experiment, i = %d", i));
+        System.out.println(String.format("Runtime: %d", endTime - startTime));
+        System.out.println(String.format("Number of links: %d", heap.linkNum));
+        System.out.println(String.format("Number of trees: %d", heap.numTrees()));
+        System.out.println(String.format("Sum of deleted ranks: %d", heap.sumOfDeletedRanks));
+        System.out.println("-----------------------------------------------------");
     }
 
     /**
@@ -28,7 +100,8 @@ public class BinomialHeap {
      * pre: key > 0
      *
      * Insert (key,info) into the heap and return the newly generated HeapItem.
-     *
+     * 
+     * Complexity: O(log n)
      */
     public HeapItem insert(int key, String info) {
         if (empty()) {
@@ -48,6 +121,8 @@ public class BinomialHeap {
 
     /**
      * Update the `min` pointer. Goes over the entire tree list.
+     * 
+     * Complexity: O(log n)
      */
     private void updateMin() {
         if (empty()) {
@@ -67,6 +142,7 @@ public class BinomialHeap {
      * 
      * Delete the minimal item
      *
+     * Complexity: O(log n)
      */
     public void deleteMin() {
         if (empty()) {
@@ -100,6 +176,7 @@ public class BinomialHeap {
         }
 
         numOfTrees -= 1;
+        sumOfDeletedRanks += min.rank;
         beforeMin.next = min.next;
         this.size -= minHeap.size + 1;
         if (last == min) {
@@ -112,7 +189,8 @@ public class BinomialHeap {
     /**
      * 
      * Return the minimal HeapItem, null if empty.
-     *
+     * 
+     * Complexity: O(1)
      */
     public HeapItem findMin() {
         if (empty()) {
@@ -123,6 +201,8 @@ public class BinomialHeap {
 
     /**
      * Swaps two HeapNodes' items.
+     *
+     * Complexity: O(1)
      */
     private static void swapItems(HeapNode node1, HeapNode node2) {
         HeapItem temp = node1.item;
@@ -134,6 +214,8 @@ public class BinomialHeap {
 
     /**
      * Pushes an item up its tree to restore the Heap property.
+     *
+     * Complexity: O(log n)
      */
     private static void heapifyUp(HeapItem item) {
         while (item.node.parent != null && item.key < item.node.parent.item.key) {
@@ -147,6 +229,7 @@ public class BinomialHeap {
      * 
      * Decrease the key of item by diff and fix the heap.
      * 
+     * Complexity: O(log n)
      */
     public void decreaseKey(HeapItem item, int diff) {
         item.key -= diff;
@@ -160,16 +243,21 @@ public class BinomialHeap {
      * 
      * Delete the item from the heap.
      *
+     * Complexity: O(log n)
      */
     public void delete(HeapItem item) {
+        sumOfDeletedRanks += item.node.rank;
         decreaseKey(item, item.key - min.item.key + 1);
+        sumOfDeletedRanks -= min.rank;
         deleteMin();
     }
 
     /**
      * Add 3 HeapNodes together, assuming they are all not null.
+     *
+     * Complexity: O(1)
      */
-    private static AdderResult add3(HeapNode node1, HeapNode node2, HeapNode node3) {
+    private AdderResult add3(HeapNode node1, HeapNode node2, HeapNode node3) {
         ArrayList<HeapNode> l = new ArrayList<HeapNode>(Arrays.asList(node1, node2, node3));
         HeapNode result = Collections.min(l, (a, b) -> Integer.compare(a.item.key, b.item.key));
         l.remove(result);
@@ -181,6 +269,8 @@ public class BinomialHeap {
 
     /**
      * Returns the next HeapNode in the list, or null if we've reached the end.
+     *
+     * Complexity: O(1)
      */
     private static HeapNode advance(HeapNode node, BinomialHeap heap) {
         if (node == heap.last || node == null) {
@@ -205,6 +295,8 @@ public class BinomialHeap {
     /**
      * Returns the HeapNode that isn't null, assuming there's only one such
      * HeapNode.
+     *
+     * Complexity: O(1)
      */
     private static HeapNode getNotNull(HeapNode node1, HeapNode node2, HeapNode node3) {
         if (node1 != null) {
@@ -218,8 +310,10 @@ public class BinomialHeap {
 
     /**
      * Adds the HeapNodes together, assuming exactly one in null.
+     *
+     * Complexity: O(1)
      */
-    private static HeapNode add2(HeapNode node1, HeapNode node2, HeapNode node3) {
+    private HeapNode add2(HeapNode node1, HeapNode node2, HeapNode node3) {
         if (node1 == null) {
             return link(node2, node3);
         } else if (node2 == null) {
@@ -230,8 +324,10 @@ public class BinomialHeap {
 
     /**
      * Adds three HeapNodes together (null or not) and returns the result.
+     *
+     * Complexity: O(1)
      */
-    private static AdderResult fullAdder(HeapNode node1, HeapNode node2, HeapNode node3) {
+    private AdderResult fullAdder(HeapNode node1, HeapNode node2, HeapNode node3) {
         int notNullNum = (node1 != null ? 1 : 0) + (node2 != null ? 1 : 0) + (node3 != null ? 1 : 0);
         switch (notNullNum) {
             case 0:
@@ -251,6 +347,7 @@ public class BinomialHeap {
      * 
      * Meld the heap with heap2
      *
+     * Complexity: O(log n)
      */
     public void meld(BinomialHeap heap2) {
         if (empty()) {
@@ -348,6 +445,8 @@ public class BinomialHeap {
 
     /**
      * Pushes the `min` pointer up its tree.
+     *
+     * Complexity: O(log n)
      */
     private void pushMinUp() {
         while (min.parent != null) {
@@ -359,6 +458,7 @@ public class BinomialHeap {
      * 
      * Return the number of elements in the heap
      * 
+     * Complexity: O(1)
      */
     public int size() {
         return size;
@@ -369,6 +469,7 @@ public class BinomialHeap {
      * The method returns true if and only if the heap
      * is empty.
      * 
+     * Complexity: O(1)
      */
     public boolean empty() {
         return size == 0;
@@ -378,6 +479,7 @@ public class BinomialHeap {
      * 
      * Return the number of trees in the heap.
      * 
+     * Complexity: O(1)
      */
     public int numTrees() {
         return numOfTrees;
@@ -385,8 +487,11 @@ public class BinomialHeap {
 
     /**
      * Links two HeapNodes of the same rank, as seen in class.
+     *
+     * Complexity: O(1)
      */
-    public static HeapNode link(HeapNode node1, HeapNode node2) {
+    public HeapNode link(HeapNode node1, HeapNode node2) {
+        linkNum++;
         if (node1.item.key <= node2.item.key) {
             node1.addAsChild(node2);
             return node1;
@@ -427,6 +532,8 @@ public class BinomialHeap {
 
         /**
          * Add a node of the same rank as child (does not check keys)
+         *
+         * Complexity: O(1)
          */
         public void addAsChild(HeapNode node) {
             if (child == null) {

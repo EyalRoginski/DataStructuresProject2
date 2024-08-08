@@ -29,13 +29,11 @@ public class Validator {
         Map<String, Integer> expectedNodes = state.items;
         if (expectedNodes.size() != state.heap.size) {
             return "The heap has %d nodes. Expected is %d".formatted(
-                    state.heap.size, expectedNodes.size()
-            );
+                    state.heap.size, expectedNodes.size());
         }
         if (expectedNodes.size() != state.heap.size()) {
             return "heap.size() returned %d nodes. Expected is %d".formatted(
-                    state.heap.size, expectedNodes.size()
-            );
+                    state.heap.size, expectedNodes.size());
         }
         if (expectedNodes.size() == 0 && !state.heap.empty()) {
             return "heap.empty() returned false for an empty heap";
@@ -49,8 +47,7 @@ public class Validator {
             }
             if (expectedNodes.get(node.item.info) != node.item.key) {
                 return "Node %s should have a key of %d, not %d".formatted(
-                        node.item.info, expectedNodes.get(node.item.info), node.item.key
-                );
+                        node.item.info, expectedNodes.get(node.item.info), node.item.key);
             }
         }
         if (state.items.size() > 0) {
@@ -61,24 +58,20 @@ public class Validator {
             }
             if (minItem.key != expectedMinKey) {
                 return "Expected minimal key in the heap is %d, findMin returned (%d, %s)".formatted(
-                        expectedMinKey, minItem.key, minItem.info
-                );
+                        expectedMinKey, minItem.key, minItem.info);
             }
             if (minItem.node.parent != null) {
                 return "findMin returned a non-root node: (%d, %s)".formatted(minItem.key, minItem.info);
             }
-        }
-        else {
+        } else {
             BinomialHeap.HeapItem minItem = state.heap.findMin();
             if (minItem != null) {
                 return "findMin returned a non-null result (%d, %s) for an empty heap.".formatted(
-                        minItem.key, minItem.info
-                );
+                        minItem.key, minItem.info);
             }
             if (state.heap.last != null) {
                 return "BinomialHeap.last is not null (%d, %s) in an empty heap.".formatted(
-                        state.heap.last.item.key, state.heap.last.item.info
-                );
+                        state.heap.last.item.key, state.heap.last.item.info);
             }
         }
 
@@ -107,14 +100,12 @@ public class Validator {
             }
             if (currNode.parent != null) {
                 return "Parent pointer of %s is %s, but it is in the root list".formatted(
-                        currNode.item.info, currNode.parent.item.info
-                );
+                        currNode.item.info, currNode.parent.item.info);
             }
             if (currNode != heap.last && currNode.rank >= currNode.next.rank) {
                 return String.format(
                         "The roots are not in (strictly) ascending rank order, %s (rank %d) comes before %s (rank %d)",
-                        currNode.item.info, currNode.rank, currNode.next.item.info, currNode.rank
-                );
+                        currNode.item.info, currNode.rank, currNode.next.item.info, currNode.rank);
             }
             expectedSize += Math.pow(2, currNode.rank);
             currNode = currNode.next;
@@ -132,9 +123,10 @@ public class Validator {
 
         return null;
     }
+
     public static String validateBinomialTree(BinomialHeap.HeapNode root, Set<String> encounteredInfos) {
 
-        if (root == null){
+        if (root == null) {
             return null;
         }
 
@@ -144,15 +136,13 @@ public class Validator {
 
         if (root.item.node != root) {
             return "Mismatch between node.item and item.node pointers for a node with value %s".formatted(
-                    root.item.info
-            );
+                    root.item.info);
         }
 
         if (encounteredInfos.contains(root.item.info)) {
             return String.format(
                     "Info %s found twice in the heap. This means there is a duplicate node - the tester uses unique infos",
-                    root.item.info
-            );
+                    root.item.info);
         }
         encounteredInfos.add(root.item.info);
 
@@ -166,35 +156,30 @@ public class Validator {
         BinomialHeap.HeapNode currChild = root.child.next; // first child
         if (currChild == null) {
             return "The list of children of %s is not circular (next of %s is null)".formatted(
-                    root.item.info, root.child.item.info
-            );
+                    root.item.info, root.child.item.info);
 
         }
         int childCount = 0;
         do {
             if (currChild.next == null) {
                 return "The list of children of %s is not circular (next of %s is null)".formatted(
-                        root.item.info, currChild.item.info
-                );
+                        root.item.info, currChild.item.info);
             }
             if (currChild.parent == null) {
                 return "Parent pointer of %s is null, but it is in the children list of %s".formatted(
-                        currChild.item.info, root.item.info
-                );
+                        currChild.item.info, root.item.info);
             }
             if (currChild.parent != root) {
                 return "Parent pointer of %s is %s, but it is in the children list of %s".formatted(
-                        currChild.item.info, currChild.parent.item.info, root.item.info
-                );
+                        currChild.item.info, currChild.parent.item.info, root.item.info);
             }
             if (currChild.rank != childCount) {
                 return "%d-th child of %s has a rank of %d. Should be %d".formatted(
-                        childCount, root.item.info, currChild.rank, childCount
-                );
+                        childCount, root.item.info, currChild.rank, childCount);
             }
 
             String childError = validateBinomialTree(currChild, encounteredInfos);
-            if (childError != null){
+            if (childError != null) {
                 return childError;
             }
 
@@ -205,8 +190,7 @@ public class Validator {
 
         if (root.rank != childCount) {
             return "%s is of rank %d, but it has %d children".formatted(
-                    root.item.info, root.rank, childCount
-            );
+                    root.item.info, root.rank, childCount);
         }
 
         return null;
@@ -218,7 +202,7 @@ public class Validator {
             if (size % 2 == 1) {
                 numOfTrees++;
             }
-            size /=2;
+            size /= 2;
         }
         return numOfTrees;
     }
